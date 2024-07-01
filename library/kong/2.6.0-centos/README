@@ -1,0 +1,12 @@
+在客户使用的过程中，发现luajit在使用jit的过程中会core dumped，解决方法是禁用jit，当前目录下编译的镜像luajit仍然为on模式，即使将luajit地址更改为禁用jit的项目地址也无济于事
+解决办法：
+在当前目录下编译出root版本的kong镜像后，在容器内编译禁用jit的luajit项目，安装到/usr/local/openresty/luajit下
+执行步骤
+docker run -itd --name kong cr.loongnix.cn/library/kong:2.6.0-centos-root
+
+docker exec -it kong bash
+$ cd home && git clone --depth 1 https://github.com/yzewei/luajit2 && make && make install
+$ exit 
+
+docker commit kong  cr.loongnix.cn/library/kong:2.6.0-centos-commit
+docker push cr.loongnix.cn/library/kong:2.6.0-centos-commit
