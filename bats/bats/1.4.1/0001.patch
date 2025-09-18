@@ -1,0 +1,20 @@
+diff --git a/Dockerfile b/Dockerfile
+index 35c48ef..ff66895 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -1,12 +1,13 @@
+ ARG bashver=latest
+ 
+-FROM bash:${bashver}
++FROM cr.loongnix.cn/library/bash:5.2
+ ARG TINI_VERSION=v0.19.0
+ ARG TARGETPLATFORM
+ 
+ COPY ./docker /tmp/docker
+ # default to amd64 when not running in buildx environment that provides target platform
+-RUN /tmp/docker/install_tini.sh "${TARGETPLATFORM-linux/amd64}"
++#RUN /tmp/docker/install_tini.sh "${TARGETPLATFORM-linux/amd64}"
++RUN wget https://cloud.loongnix.cn/releases/loongarch64abi1/tini/tini-static_0.19.0_la64 &&  mv tini-static_0.19.0_la64 /usr/local/bin/tini
+     
+ 
+ # Install parallel and accept the citation notice (we aren't using this in a
