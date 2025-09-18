@@ -1,0 +1,40 @@
+From d041378cf80fa0f2d0abb84e2d7be04de9866c8a Mon Sep 17 00:00:00 2001
+From: yzewei <yangzewei@loongson.cn>
+Date: Tue, 16 Sep 2025 19:55:09 +0800
+Subject: [PATCH] add loong64 support
+
+Signed-off-by: yzewei <yangzewei@loongson.cn>
+---
+ cmd/admission-webhook/Dockerfile | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/cmd/admission-webhook/Dockerfile b/cmd/admission-webhook/Dockerfile
+index d3a0375..052c89d 100644
+--- a/cmd/admission-webhook/Dockerfile
++++ b/cmd/admission-webhook/Dockerfile
+@@ -1,8 +1,10 @@
+-ARG ARCH=amd64
++ARG ARCH=loong64
+ ARG OS=linux
+ ARG GOLANG_BUILDER=1.23
+ 
+-FROM quay.io/prometheus/golang-builder:${GOLANG_BUILDER}-base AS builder
++#FROM quay.io/prometheus/golang-builder:${GOLANG_BUILDER}-base AS builder
++FROM cr.loongnix.cn/library/golang:1.23 AS builder
++RUN dnf install git -y
+ WORKDIR /workspace
+ 
+ COPY . .
+@@ -15,7 +17,8 @@ ARG GOARCH
+ ENV GOARCH=${GOARCH}
+ RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build make admission-webhook
+ 
+-FROM quay.io/prometheus/busybox-${OS}-${ARCH}:latest
++#FROM quay.io/prometheus/busybox-${OS}-${ARCH}:latest
++FROM cr.loongnix.cn/prometheus/busybox:glibc
+ 
+ COPY --from=builder workspace/admission-webhook /bin/admission-webhook
+ 
+-- 
+2.27.0
+
