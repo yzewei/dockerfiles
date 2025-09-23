@@ -1,0 +1,57 @@
+diff --git a/Makefile b/Makefile
+index 491b914..1bb0a06 100644
+--- a/Makefile
++++ b/Makefile
+@@ -195,7 +195,7 @@ operator-image:
+ 
+ .PHONY: prometheus-config-reloader-image
+ prometheus-config-reloader-image:
+-	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg GOARCH=$(GOARCH) --build-arg OS=$(GOOS) -t $(IMAGE_RELOADER):$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
++	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg https_proxy=$(https_proxy) --build-arg GOARCH=$(GOARCH) --build-arg OS=$(GOOS) -t cr.loongnix.cn/prometheus/prometheus-config-reloader:0.85.0 -f cmd/prometheus-config-reloader/Dockerfile .
+ 
+ .PHONY: admission-webhook-image
+ admission-webhook-image:
+diff --git a/cmd/prometheus-config-reloader/Dockerfile b/cmd/prometheus-config-reloader/Dockerfile
+index d84cfb9..6a571b2 100644
+--- a/cmd/prometheus-config-reloader/Dockerfile
++++ b/cmd/prometheus-config-reloader/Dockerfile
+@@ -1,8 +1,9 @@
+-ARG ARCH=amd64
++ARG ARCH=loong64
+ ARG OS=linux
+ ARG GOLANG_BUILDER=1.24
+ 
+-FROM quay.io/prometheus/golang-builder:${GOLANG_BUILDER}-base AS builder
++#FROM quay.io/prometheus/golang-builder:${GOLANG_BUILDER}-base AS builder
++FROM cr.loongnix.cn/library/golang:1.24 AS builder
+ WORKDIR /workspace
+ 
+ COPY . .
+@@ -15,10 +16,11 @@ ARG GOARCH
+ ENV GOARCH=${GOARCH}
+ RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build make prometheus-config-reloader
+ 
+-FROM quay.io/prometheus/busybox-${OS}-${ARCH}:latest
++#FROM quay.io/prometheus/busybox-${OS}-${ARCH}:latest
++FROM cr.loongnix.cn/prometheus/busybox:glibc 
+ 
+ COPY --from=builder workspace/prometheus-config-reloader /bin/prometheus-config-reloader
+ 
+-USER nobody
++USER root
+ 
+ ENTRYPOINT ["/bin/prometheus-config-reloader"]
+diff --git a/go.mod b/go.mod
+index 80500e0..0fe2643 100644
+--- a/go.mod
++++ b/go.mod
+@@ -1,8 +1,6 @@
+ module github.com/prometheus-operator/prometheus-operator
+ 
+-go 1.24.0
+-
+-toolchain go1.24.3
++go 1.23
+ 
+ require (
+ 	github.com/KimMachineGun/automemlimit v0.7.4
