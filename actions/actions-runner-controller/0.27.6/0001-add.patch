@@ -1,0 +1,55 @@
+diff --git a/Dockerfile b/Dockerfile
+index 999477b..70026ff 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -1,5 +1,5 @@
+ # Build the manager binary
+-FROM --platform=$BUILDPLATFORM golang:1.20.7 as builder
++FROM --platform=$BUILDPLATFORM cr.loongnix.cn/library/golang:1.24 as builder
+ 
+ WORKDIR /workspace
+ 
+@@ -44,7 +44,8 @@ RUN --mount=target=. \
+ 
+ # Use distroless as minimal base image to package the manager binary
+ # Refer to https://github.com/GoogleContainerTools/distroless for more details
+-FROM gcr.io/distroless/static:nonroot
++#FROM gcr.io/distroless/static:nonroot
++FROM cr.loongnix.cn/distroless/static:latest
+ 
+ WORKDIR /
+ 
+diff --git a/Makefile b/Makefile
+index a53aa1c..a100421 100644
+--- a/Makefile
++++ b/Makefile
+@@ -50,7 +50,7 @@ endif
+ 
+ # default list of platforms for which multiarch image is built
+ ifeq (${PLATFORMS}, )
+-	export PLATFORMS="linux/amd64,linux/arm64"
++	export PLATFORMS="linux/loong64"
+ endif
+ 
+ # if IMG_RESULT is unspecified, by default the image will be pushed to registry
+@@ -209,17 +209,15 @@ shellcheck: shellcheck-install
+ docker-buildx:
+ 	export DOCKER_CLI_EXPERIMENTAL=enabled ;\
+ 	export DOCKER_BUILDKIT=1
+-	@if ! docker buildx ls | grep -q container-builder; then\
+-		docker buildx create --platform ${PLATFORMS} --name container-builder --use;\
+-	fi
+ 	docker buildx build --platform ${PLATFORMS} \
+ 		--build-arg RUNNER_VERSION=${RUNNER_VERSION} \
+ 		--build-arg DOCKER_VERSION=${DOCKER_VERSION} \
+ 		--build-arg VERSION=${VERSION} \
+ 		--build-arg COMMIT_SHA=${COMMIT_SHA} \
+-		-t "${DOCKER_IMAGE_NAME}:${VERSION}" \
++		--build-arg https_proxy=${https_proxy} \
++		-t "cr.loongnix.cn/actions/actions-runner-controller:0.27.6" \
+ 		-f Dockerfile \
+-		. ${PUSH_ARG}
++		. --load
+ 
+ # Push the docker image
+ docker-push:
